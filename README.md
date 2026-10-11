@@ -22,19 +22,17 @@ Générer un jeton : `docker run --rm php:8.4-cli php -r "echo bin2hex(random_by
 
 ## Déployer en production (VPS)
 
-Prérequis : Docker + Docker Compose sur le serveur, un enregistrement DNS `A` du domaine vers l'IP du serveur, ports 80 et 443 ouverts.
+Prérequis : Docker + Docker Compose, un Traefik déjà présent sur le serveur (réseau externe `frontend`, entrypoints `web`/`websecure`, resolver de certificats `ovhcloud`) et un enregistrement DNS `A` du domaine vers le serveur.
 
 ```bash
-git clone git@github.com:matthisRipoche/veille-app.git veille && cd veille
 cp .env.example .env
-# Renseigner : API_TOKEN, DB_PASSWORD, puis décommenter COMPOSE_PROFILES=prod,
-# APP_DOMAIN et APP_URL (https://veille.matthisripoche.com)
+# Renseigner API_TOKEN et DB_PASSWORD, puis décommenter COMPOSE_FILE, APP_DOMAIN et APP_URL
 docker compose up -d --build
 ```
 
-Caddy obtient et renouvelle automatiquement le certificat HTTPS. L'application n'écoute que sur `127.0.0.1` ; seuls 80/443 sont publics.
+`compose.prod.yaml` retire la publication de port et déclare les labels Traefik : l'accès public se fait uniquement en HTTPS via Traefik. Sans Traefik, retirez `COMPOSE_FILE` et placez votre propre reverse proxy devant `127.0.0.1:${APP_PORT}`.
 
-Mise à jour : `git pull && docker compose up -d --build`.
+Mise à jour : récupérer le nouveau code puis `docker compose up -d --build`.
 
 ## Variables d'environnement (fichier `.env`)
 
@@ -45,8 +43,8 @@ Mise à jour : `git pull && docker compose up -d --build`.
 | `SITE_PASSWORD` | Optionnel. Protège la lecture du site par mot de passe (HTTP Basic, nom d'utilisateur libre). |
 | `DB_DATABASE`, `DB_USERNAME` | Base et utilisateur MariaDB (`veille` par défaut). |
 | `APP_PORT` | Port local de l'app, lié à `127.0.0.1` (8080 par défaut). |
-| `COMPOSE_PROFILES` | `prod` active Caddy (HTTPS) en production. |
-| `APP_DOMAIN` | Domaine servi par Caddy (obligatoire avec le profil `prod`). |
+| `COMPOSE_FILE` | `compose.yaml:compose.prod.yaml` active la surcharge Traefik en production. |
+| `APP_DOMAIN` | Domaine routé par Traefik (obligatoire en production). |
 | `APP_URL` | URL publique, utilisée dans les liens renvoyés par le MCP. |
 | `APP_KEY` | Optionnel. Générée au démarrage si vide. |
 

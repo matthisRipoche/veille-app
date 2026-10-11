@@ -45,24 +45,5 @@ services:
       timeout: 5s
       retries: 20
 
-  # Reverse proxy HTTPS (Let's Encrypt automatique). Actif avec COMPOSE_PROFILES=prod.
-  caddy:
-    image: caddy:2
-    profiles: ["prod"]
-    restart: unless-stopped
-    depends_on:
-      - app
-    ports:
-      - "80:80"
-      - "443:443"
-    environment:
-      APP_DOMAIN: ${APP_DOMAIN:-}
-    volumes:
-      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy-data:/data
-      - caddy-config:/config
-
 volumes:
   db-data:
-  caddy-data:
-  caddy-config:

@@ -1,0 +1,26 @@
+# Surcharge de production : l'app est exposée par le Traefik déjà présent sur le
+# serveur (réseau externe `frontend`, resolver de certificats `ovhcloud`).
+# Activée avec COMPOSE_FILE=compose.yaml:compose.prod.yaml dans le .env du serveur.
+services:
+  app:
+    ports: !reset []
+    networks:
+      - default
+      - frontend
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: frontend
+      traefik.http.routers.veille.rule: Host(`${APP_DOMAIN:?Définissez APP_DOMAIN dans le fichier .env}`)
+      traefik.http.routers.veille.entrypoints: websecure
+      traefik.http.routers.veille.tls: "true"
+      traefik.http.routers.veille.tls.certresolver: ovhcloud
+      traefik.http.routers.veille.service: veille
+      traefik.http.services.veille.loadbalancer.server.port: "80"
+      traefik.http.routers.veille-http.rule: Host(`${APP_DOMAIN}`)
+      traefik.http.routers.veille-http.entrypoints: web
+      traefik.http.routers.veille-http.middlewares: veille-https
+      traefik.http.middlewares.veille-https.redirectscheme.scheme: https
+
+networks:
+  frontend:
+    external: true
