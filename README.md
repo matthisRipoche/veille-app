@@ -20,6 +20,22 @@ Le site écoute sur http://localhost:8080. Les migrations sont appliquées au d�
 
 Générer un jeton : `docker run --rm php:8.4-cli php -r "echo bin2hex(random_bytes(32)).PHP_EOL;"`
 
+## Déployer en production (VPS)
+
+Prérequis : Docker + Docker Compose sur le serveur, un enregistrement DNS `A` du domaine vers l'IP du serveur, ports 80 et 443 ouverts.
+
+```bash
+git clone git@github.com:matthisRipoche/veille-app.git veille && cd veille
+cp .env.example .env
+# Renseigner : API_TOKEN, DB_PASSWORD, puis décommenter COMPOSE_PROFILES=prod,
+# APP_DOMAIN et APP_URL (https://veille.matthisripoche.com)
+docker compose up -d --build
+```
+
+Caddy obtient et renouvelle automatiquement le certificat HTTPS. L'application n'écoute que sur `127.0.0.1` ; seuls 80/443 sont publics.
+
+Mise à jour : `git pull && docker compose up -d --build`.
+
 ## Variables d'environnement (fichier `.env`)
 
 | Variable | Rôle |
@@ -28,7 +44,9 @@ Générer un jeton : `docker run --rm php:8.4-cli php -r "echo bin2hex(random_by
 | `DB_PASSWORD` | Obligatoire. Mot de passe de l'utilisateur MariaDB. |
 | `SITE_PASSWORD` | Optionnel. Protège la lecture du site par mot de passe (HTTP Basic, nom d'utilisateur libre). |
 | `DB_DATABASE`, `DB_USERNAME` | Base et utilisateur MariaDB (`veille` par défaut). |
-| `APP_PORT` | Port exposé (8080 par défaut). |
+| `APP_PORT` | Port local de l'app, lié à `127.0.0.1` (8080 par défaut). |
+| `COMPOSE_PROFILES` | `prod` active Caddy (HTTPS) en production. |
+| `APP_DOMAIN` | Domaine servi par Caddy (obligatoire avec le profil `prod`). |
 | `APP_URL` | URL publique, utilisée dans les liens renvoyés par le MCP. |
 | `APP_KEY` | Optionnel. Générée au démarrage si vide. |
 
